@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COURTSIDE — NBA Tracker</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--panel2:#18233c;--line:#263451;--muted:#9ba9c4;--text:#f4f7ff;--orange:#ff8a3d;--green:#49d6a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 85% -10%,#23365b 0,transparent 65%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{border-bottom:1px solid var(--line);background:#0b1020dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.wrap{max-width:1120px;margin:auto;padding:0 24px}.nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:900;letter-spacing:2px;font-size:19px}.brand span{color:var(--orange)}.nav small{color:var(--muted)}
+main{padding:34px 0 70px}.eyebrow{color:var(--orange);font-weight:800;letter-spacing:2px;font-size:11px}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:26px}.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.04;margin:8px 0}.hero p{color:var(--muted);margin:0}.date{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px 14px;font:inherit}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}.stat,.panel{background:linear-gradient(145deg,var(--panel),#10182a);border:1px solid var(--line);border-radius:17px}.stat{padding:17px 19px}.stat label{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:27px}.stat em{font-style:normal;color:var(--green);font-size:12px;margin-left:8px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:22px 0}.search,.filter{background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 13px;font:inherit}.search{flex:1;min-width:180px}.filter{min-width:130px}.tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);padding:5px;border-radius:12px}.tab{border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700}.tab.active{background:var(--panel2);color:var(--text)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px}.section-head h2{font-size:17px;margin:0}.section-head span{color:var(--muted);font-size:12px}
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.game{padding:17px 18px;cursor:default;transition:.18s;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.game:hover{transform:none;border-color:var(--line)}.game-top{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:14px}.status{font-weight:800;letter-spacing:.8px;color:var(--green)}.status.scheduled{color:var(--orange)}.team{display:grid;grid-template-columns:1fr auto;align-items:center;margin:9px 0}.team-name{font-weight:700}.team-code{display:inline-grid;place-items:center;width:32px;height:32px;background:var(--panel2);border-radius:9px;color:#c8d5f0;font-size:11px;margin-right:10px}.score{font-size:23px;font-weight:900;font-variant-numeric:tabular-nums}.game-foot{border-top:1px solid var(--line);padding-top:11px;margin-top:13px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between}
+.empty{grid-column:1/-1;padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:15px}
+button{cursor:pointer}.primary{background:var(--orange);color:#21150e;border:0;border-radius:10px;padding:10px 14px;font-weight:900}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-weight:700}
+.modal-bg{position:fixed;inset:0;background:#020611b8;display:none;place-items:center;padding:18px;z-index:10}.modal-bg.open{display:grid}.modal{width:min(460px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.modal h3{margin:0 0 4px}.modal p{color:var(--muted);font-size:13px;margin:0 0 18px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formgrid label{font-size:12px;color:var(--muted)}.formgrid input,.formgrid select{width:100%;margin-top:5px;background:#0c1426;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px;font:inherit}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+footer{color:var(--muted);font-size:12px;margin-top:28px}
+@media(max-width:700px){.wrap{padding:0 16px}.hero{align-items:start;flex-direction:column}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:22px}.games{grid-template-columns:1fr}.nav small{display:none}}
+
+.mainnav{display:flex;gap:7px;overflow-x:auto;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:13px;margin:0 0 22px}
+.navtab{flex:1;min-width:90px;border:0;border-radius:9px;background:transparent;color:var(--muted);padding:11px 14px;font:inherit;font-weight:800;cursor:pointer}
+.navtab.active{background:var(--orange);color:#21150e}
+.view{display:none}.view.active{display:block}
+.info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.info-card{padding:17px;background:var(--panel);border:1px solid var(--line);border-radius:15px}
+.info-card h3{margin:0 0 5px;font-size:15px}.info-card p{margin:0;color:var(--muted);font-size:13px}
+.team-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.team-chip{padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;display:flex;gap:10px;align-items:center}
+.team-chip b{display:inline-grid;place-items:center;background:var(--panel2);width:36px;height:36px;border-radius:9px;font-size:11px}
+.team-chip span{font-size:13px;font-weight:700}
+.data-note{padding:13px 15px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:13px;margin:14px 0}
+a.source-link{color:var(--orange);font-weight:800;text-decoration:none}
+.fixture-list{display:grid;gap:9px}
+.fixture{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 15px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.fixture small{color:var(--muted)}
+@media(max-width:700px){.info-grid{grid-template-columns:1fr}.team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><div class="brand">COURT<span>SIDE</span></div><small>NBA SCOREBOARD · 2026–27 SEASON</small></div></header>
+<main class="wrap">
+
+ <nav class="mainnav" aria-label="Main sections">
+  <button class="navtab active" data-section="scores">Scores</button>
+  <button class="navtab" data-section="standings">Standings</button>
+  <button class="navtab" data-section="teams">Teams</button>
+  <button class="navtab" data-section="players">Players</button>
+  <button class="navtab" data-section="schedule">Schedule</button>
+  <button class="navtab" data-section="highlights">Highlights</button>
+ </nav>
+ <section class="view active" id="view-scores">
+ <div class="hero"><div><div class="eyebrow">THE LEAGUE, AT A GLANCE</div><h1>Every game.<br>Every result.</h1><p>Your personal hub for NBA scores and game tracking.</p></div><input class="date" type="date" id="datePicker" value="2026-11-05"></div>
+ <div class="data-note" id="connectionStatus" role="status">Connecting to NBA data feeds…</div>
+ <div class="stats">
+  <div class="stat"><label>GAMES ON THIS DATE</label><strong id="total">2</strong><em>scheduled</em></div>
+  <div class="stat"><label>COMPLETED</label><strong id="completed">0</strong></div>
+  <div class="stat"><label>LIVE GAMES</label><strong id="live">0</strong></div>
+ </div>
+ <div class="toolbar"><input class="search" id="search" placeholder="Search team or abbreviation…"><select class="filter" id="statusFilter"><option value="all">All games</option><option value="live">Live</option><option value="final">Final</option><option value="scheduled">Scheduled</option></select><div class="tabs"><button class="tab active" data-day="all">All</button><button class="tab" data-day="east">East</button><button class="tab" data-day="west">West</button></div></div>
+ <div class="section-head"><h2 id="listTitle">Game results</h2><span id="countLabel">2 matchups</span></div>
+ <div class="games" id="games"></div>
+ </section>
+ <section class="view" id="view-standings">
+  <div class="hero"><div><div class="eyebrow">THE RACE TO THE PLAYOFFS</div><h1>Conference<br>standings.</h1><p>Eastern and Western Conference tables.</p></div></div>
+  <div id="standingsData"><div class="data-note">Loading current conference standings…</div></div>
+  <div class="info-grid">
+   <article class="info-card"><h3>Eastern Conference</h3><p>Atlantic · Central · Southeast divisions</p><p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/standings" target="_blank" rel="noopener">View official NBA standings ↗</a></p></article>
+   <article class="info-card"><h3>Western Conference</h3><p>Northwest · Pacific · Southwest divisions</p><p style="margin-top:12px"><a class="source-link" href="https://www.espn.com.au/nba/standings" target="_blank" rel="noopener">View ESPN standings ↗</a></p></article>
+   <article class="info-card"><h3>What to track</h3><p>Win percentage, games behind, streaks and home/away records.</p></article>
+  </div>
+  <div class="data-note">Live standings are not embedded in this offline version. Use the source links for the latest verified rankings.</div>
+ </section>
+ <section class="view" id="view-teams">
+  <div class="hero"><div><div class="eyebrow">ALL 30 FRANCHISES</div><h1>Explore<br>the teams.</h1><p>Browse every NBA team by conference.</p></div></div>
+  <div class="section-head"><h2>Eastern Conference</h2><span>15 teams</span></div>
+  <div class="team-grid" id="eastTeams"></div>
+  <div class="section-head"><h2>Western Conference</h2><span>15 teams</span></div>
+  <div class="team-grid" id="westTeams"></div>
+  <div class="data-note" id="teamsNote">Team directory and records are loaded from available league feeds when possible. Current records and team statistics are available from <a class="source-link" href="https://www.nba.com/teams" target="_blank" rel="noopener">NBA.com teams ↗</a> and <a class="source-link" href="https://www.espn.com.au/nba/teams" target="_blank" rel="noopener">ESPN teams ↗</a>.</div>
+ </section>
+ <section class="view" id="view-players">
+  <div class="hero"><div><div class="eyebrow">PLAYER CENTRAL</div><h1>Players &amp;<br>leaders.</h1><p>Find player profiles, box scores and statistical leaders.</p></div></div>
+  <div id="playerLeaders"><div class="data-note">Loading player leaders…</div></div>
+  <div class="info-grid">
+   <article class="info-card"><h3>Scoring leaders</h3><p>Points per game and total points.</p><p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/stats/players/traditional?sort=PTS" target="_blank" rel="noopener">NBA scoring stats ↗</a></p></article>
+   <article class="info-card"><h3>Rebounding leaders</h3><p>Rebounds per game and total rebounds.</p><p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/stats/players/traditional?sort=REB" target="_blank" rel="noopener">NBA rebounding stats ↗</a></p></article>
+   <article class="info-card"><h3>Assist leaders</h3><p>Assists per game and total assists.</p><p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/stats/players/traditional?sort=AST" target="_blank" rel="noopener">NBA assist stats ↗</a></p></article>
+  </div>
+  <div class="data-note">Player rankings and season totals change throughout the season. Open NBA Stats or <a class="source-link" href="https://www.espn.com.au/nba/stats" target="_blank" rel="noopener">ESPN player statistics ↗</a> for current figures.</div>
+ </section>
+ <section class="view" id="view-schedule">
+  <div class="hero"><div><div class="eyebrow">PLAN YOUR NEXT TIP-OFF</div><h1>NBA<br>schedule.</h1><p>League fixtures from the live schedule feed.</p></div></div>
+  <div class="section-head"><h2>Upcoming games</h2><span id="scheduleUpdated">Loading schedule…</span></div>
+  <div class="fixture-list" id="scheduleList"><div class="data-note">Fetching upcoming NBA fixtures…</div></div>
+  <div class="data-note">Schedule data is requested from ESPN's public scoreboard feed, with NBA.com as the official reference. Check the official <a class="source-link" href="https://www.nba.com/schedule" target="_blank" rel="noopener">NBA schedule ↗</a> for any late changes.</div>
+ </section>
+
+ <section class="view" id="view-highlights">
+  <div class="hero"><div><div class="eyebrow">OFFICIAL NBA VIDEO</div><h1>NBA<br>highlights.</h1><p>Watch official game recaps, top plays and featured NBA videos.</p></div></div>
+  <div class="info-grid">
+   <article class="info-card">
+    <h3>Latest game recaps</h3>
+    <p>Official NBA video recaps from recent matchups, with scores and key moments.</p>
+    <p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/watch/featured" target="_blank" rel="noopener">Watch NBA game recaps ↗</a></p>
+   </article>
+   <article class="info-card">
+    <h3>Top plays &amp; highlights</h3>
+    <p>Dunks, blocks, clutch shots and standout plays from around the league.</p>
+    <p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/watch/featured" target="_blank" rel="noopener">Explore NBA highlights ↗</a></p>
+   </article>
+   <article class="info-card">
+    <h3>Featured NBA videos</h3>
+    <p>Season collections, player features, interviews and other official NBA videos.</p>
+    <p style="margin-top:12px"><a class="source-link" href="https://www.nba.com/watch/featured" target="_blank" rel="noopener">Browse NBA Watch ↗</a></p>
+   </article>
+  </div>
+  <div class="data-note">Videos and playback are provided by NBA.com. Select a link to watch the latest official highlights on the NBA website. This read-only tracker does not copy or host NBA video content.</div>
+  <div class="panel" style="padding:16px;margin-top:14px">
+   <div class="section-head" style="margin:0 0 10px"><h2>Official NBA highlights feed</h2><span>NBA.com</span></div>
+   <a href="https://www.nba.com/watch/featured" target="_blank" rel="noopener" aria-label="Open official NBA highlights and featured videos">
+    <div style="background:linear-gradient(120deg,#17243d,#263b60);border-radius:12px;padding:28px 18px;text-align:center">
+     <div style="font-size:36px;margin-bottom:8px">▶</div>
+     <b style="font-size:18px;color:#fff">Watch highlights on NBA.com</b>
+     <div style="color:#c4d0e6;font-size:13px;margin-top:5px">Game recaps · Top plays · Featured videos</div>
+    </div>
+   </a>
+  </div>
+ </section>
+
+ <section class="panel" style="padding:18px;margin-top:26px">
+  <div class="section-head" style="margin:0 0 8px"><h2>Sources &amp; game information</h2><span>Reference links</span></div>
+  <p style="color:var(--muted);font-size:13px;margin:0 0 12px">COURTSIDE requests scores, schedules, team information and player leaders from public NBA/ESPN data feeds when available. Data availability depends on the source service and browser network access; official NBA pages remain the source of record.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+   <a class="secondary" style="text-decoration:none" href="https://www.nba.com/" target="_blank" rel="noopener">NBA.com ↗</a>
+   <a class="secondary" style="text-decoration:none" href="https://www.nba.com/games" target="_blank" rel="noopener">NBA scores &amp; schedule ↗</a>
+   <a class="secondary" style="text-decoration:none" href="https://www.espn.com.au/nba/" target="_blank" rel="noopener">ESPN Australia NBA ↗</a>
+  </div>
+ </section>
+ <footer>Read-only NBA dashboard · Live data refreshes automatically when the public feeds are reachable. Unavailable feeds are clearly labelled.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
+const NBA_LIVE='https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json';
+let games=[], conf='all', teams=[], lastRefresh=null, refreshTimer=null;
+const teamData={east:[['ATL','Atlanta Hawks'],['BOS','Boston Celtics'],['BKN','Brooklyn Nets'],['CHA','Charlotte Hornets'],['CHI','Chicago Bulls'],['CLE','Cleveland Cavaliers'],['DET','Detroit Pistons'],['IND','Indiana Pacers'],['MIA','Miami Heat'],['MIL','Milwaukee Bucks'],['NYK','New York Knicks'],['ORL','Orlando Magic'],['PHI','Philadelphia 76ers'],['TOR','Toronto Raptors'],['WAS','Washington Wizards']],west:[['DAL','Dallas Mavericks'],['DEN','Denver Nuggets'],['GSW','Golden State Warriors'],['HOU','Houston Rockets'],['LAC','LA Clippers'],['LAL','Los Angeles Lakers'],['MEM','Memphis Grizzlies'],['MIN','Minnesota Timberwolves'],['NOP','New Orleans Pelicans'],['OKC','Oklahoma City Thunder'],['PHX','Phoenix Suns'],['POR','Portland Trail Blazers'],['SAC','Sacramento Kings'],['SAS','San Antonio Spurs'],['UTA','Utah Jazz']]};
+const eastCodes=new Set(teamData.east.map(t=>t[0])), westCodes=new Set(teamData.west.map(t=>t[0]));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localISO=d=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
+const today=()=>localISO(new Date());
+const dateParam=d=>d.replaceAll('-','');
+async function getJSON(url,timeout=12000){
+ const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),timeout);
+ try{const r=await fetch(url,{signal:ctl.signal,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+ finally{clearTimeout(timer)}
+}
+function normalizeESPN(data){
+ return (data.events||[]).map(ev=>{
+  const c=ev.competitions?.[0];if(!c)return null;
+  const comps=c.competitors||[], a=comps.find(x=>x.homeAway==='away')||comps[0], h=comps.find(x=>x.homeAway==='home')||comps[1];if(!a||!h)return null;
+  const state=ev.status?.type?.state||c.status?.type?.state||'pre';
+  const status=state==='in'?'live':state==='post'?'final':'scheduled';
+  const dt=ev.date||c.date||new Date().toISOString();
+  const statusText=ev.status?.type?.shortDetail||ev.status?.type?.detail||c.status?.type?.shortDetail|| (status==='scheduled'?'Scheduled':status==='final'?'Final':'Live');
+  return {id:ev.id,date:localISO(new Date(dt)),away:a.team?.displayName||a.team?.name||'Away',awayCode:a.team?.abbreviation||'AWY',awayScore:a.score===''?null:Number(a.score),home:h.team?.displayName||h.team?.name||'Home',homeCode:h.team?.abbreviation||'HME',homeScore:h.score===''?null:Number(h.score),status,note:statusText,conf:eastCodes.has(a.team?.abbreviation)?'east':(westCodes.has(a.team?.abbreviation)?'west':'all'),tip:dt,venue:c.venue?.fullName||''};
+ }).filter(Boolean);
+}
+function normalizeNBA(data){
+ const list=data.scoreboard?.games||[];
+ return list.map(g=>{
+  const v=g.awayTeam||g.visitorTeam||{},h=g.homeTeam||{};
+  const st=Number(g.gameStatus??g.statusNum??0);
+  const status=st===2?'live':st===3?'final':'scheduled';
+  const period=g.period||0, clock=g.gameClock||'';
+  const note=status==='live'?(period?'Q'+period+(clock?' · '+clock:''):'Live'):(g.gameStatusText|| (status==='final'?'Final':'Scheduled'));
+  const date=localISO(new Date(g.gameTimeUTC||g.gameDateTimeUTC||new Date().toISOString()));
+  return {id:g.gameId||g.gameID,date,away:[v.teamCity,v.teamName].filter(Boolean).join(' ')||v.teamName||'Away',awayCode:v.teamTricode||v.teamAbbreviation||'AWY',awayScore:v.score===''||v.score==null?null:Number(v.score),home:[h.teamCity,h.teamName].filter(Boolean).join(' ')||h.teamName||'Home',homeCode:h.teamTricode||h.teamAbbreviation||'HME',homeScore:h.score===''||h.score==null?null:Number(h.score),status,note,conf:eastCodes.has(v.teamTricode||v.teamAbbreviation)?'east':(westCodes.has(v.teamTricode||v.teamAbbreviation)?'west':'all'),tip:g.gameTimeUTC||'',venue:g.arenaName||''};
+ });
+}
+async function fetchGamesForDate(date){
+ const d=new Date(date+'T12:00:00');const before=new Date(d);before.setDate(before.getDate()-1);const after=new Date(d);after.setDate(after.getDate()+1);
+ const espn=await getJSON(`${API}/scoreboard?dates=${dateParam(localISO(before))}-${dateParam(localISO(after))}`);
+ return normalizeESPN(espn).filter(g=>g.date===date);
+}
+async function refreshScores(){
+ const date=$('datePicker').value||today();let list=[],source='ESPN';
+ try{
+  if(date===today()){
+   try{const nba=await getJSON(NBA_LIVE);list=normalizeNBA(nba);if(list.length)source='NBA.com live feed';}catch(e){console.warn('NBA live feed unavailable',e)}
+  }
+  if(!list.length){list=await fetchGamesForDate(date);source='ESPN scoreboard';}
+  games=list;lastRefresh=new Date();render();
+  $('connectionStatus').innerHTML=`<strong style="color:var(--green)">● Connected</strong> · ${esc(source)} · Updated ${lastRefresh.toLocaleTimeString()} · Auto-refresh every 30 seconds`;
+ }catch(e){
+  games=[];render();$('connectionStatus').innerHTML='<strong style="color:var(--orange)">● Feed unavailable</strong> · Could not load live scores. Check your internet connection or open the official <a class="source-link" href="https://www.nba.com/games" target="_blank" rel="noopener">NBA scoreboard ↗</a>.';
+  console.error(e);
+ }
+}
+function render(){
+ const date=$('datePicker').value||today(), q=$('search').value.toLowerCase(), st=$('statusFilter').value;
+ let rows=games.filter(g=>g.date===date&&[g.away,g.home,g.awayCode,g.homeCode].join(' ').toLowerCase().includes(q)&&(st==='all'||g.status===st)&&(conf==='all'||g.conf==='all'||g.conf===conf));
+ $('total').textContent=games.filter(g=>g.date===date).length;
+ $('completed').textContent=games.filter(g=>g.date===date&&g.status==='final').length;
+ $('live').textContent=games.filter(g=>g.date===date&&g.status==='live').length;
+ $('countLabel').textContent=rows.length+' matchup'+(rows.length===1?'':'s');
+ $('listTitle').textContent=new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})+' games';
+ $('games').innerHTML=rows.length?rows.map(g=>`<article class="game"><div class="game-top"><span>${esc(g.date)}</span><span class="status ${g.status}">${esc(g.note)}</span></div><div class="team"><div class="team-name"><span class="team-code">${esc(g.awayCode)}</span>${esc(g.away)}</div><div class="score">${g.awayScore??'—'}</div></div><div class="team"><div class="team-name"><span class="team-code">${esc(g.homeCode)}</span>${esc(g.home)}</div><div class="score">${g.homeScore??'—'}</div></div><div class="game-foot"><span>${esc(g.venue||'NBA regular-season game')}</span><span>${g.status==='live'?'LIVE':g.status==='final'?'FINAL':'TIP-OFF'}</span></div></article>`).join(''):`<div class="empty">${games.length?'No games match these filters.':'No games returned for this date, or the feed is unavailable.'}<br>Try another date or adjust your filters.</div>`;
+}
+function fmtTip(g){try{return new Date(g.tip).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});}catch{return g.date}}
+async function refreshSchedule(){
+ const now=new Date(), end=new Date(now);end.setDate(end.getDate()+7);
+ const start=new Date(now);start.setDate(start.getDate()-1);const dates=`${dateParam(localISO(start))}-${dateParam(localISO(end))}`;
+ try{const d=await getJSON(`${API}/scoreboard?dates=${dates}`);const rows=normalizeESPN(d).filter(g=>g.status!=='final').sort((a,b)=>new Date(a.tip)-new Date(b.tip));
+ $('scheduleList').innerHTML=rows.length?rows.map(g=>`<div class="fixture"><div><b>${esc(g.away)} (${esc(g.awayCode)}) @ ${esc(g.home)} (${esc(g.homeCode)})</b><br><small>${esc(fmtTip(g))} · ${esc(g.note)}</small></div><small>${g.status==='live'?'LIVE':g.status==='scheduled'?'UPCOMING':'—'}</small></div>`).join(''):'<div class="empty">No upcoming games were returned for the next seven days.</div>';
+ $('scheduleUpdated').textContent='Updated '+new Date().toLocaleTimeString();
+ }catch(e){$('scheduleList').innerHTML='<div class="data-note">Schedule feed unavailable. See the <a class="source-link" href="https://www.nba.com/schedule" target="_blank" rel="noopener">official NBA schedule ↗</a>.</div>';}
+}
+function statVal(entry,names){for(const n of names){const s=entry.stats?.find(x=>x.name===n||x.abbreviation===n);if(s)return s.displayValue??s.value;}return '—'}
+async function refreshStandings(){
+ try{
+  const d=await getJSON(`${API}/standings`);let groups=d.children||d.groups||[];
+  let entries=[];
+  const walk=(node,conference='')=>{const nm=(node.name||node.abbreviation||'').toLowerCase();const conf=nm.includes('east')?'east':nm.includes('west')?'west':conference;(node.children||[]).forEach(ch=>walk(ch,conf));(node.standings?.entries||[]).forEach(e=>entries.push({...e,_conference:conf}));};groups.forEach(g=>walk(g));
+  if(!entries.length&&d.standings?.entries)entries=d.standings.entries;
+  const east=entries.filter(e=>e._conference==='east'||(e.team?.conference?.name||'').toLowerCase().includes('east'));
+  const west=entries.filter(e=>e._conference==='west'||(e.team?.conference?.name||'').toLowerCase().includes('west'));
+  const renderRows=(arr)=>arr.sort((a,b)=>Number(statVal(b,['winPercent','winPct']))-Number(statVal(a,['winPercent','winPct']))).map((e,i)=>`<tr><td>${i+1}</td><td><b>${esc(e.team?.displayName||e.team?.name)}</b></td><td>${esc(statVal(e,['wins']))}</td><td>${esc(statVal(e,['losses']))}</td><td>${esc(statVal(e,['winPercent','winPct']))}</td><td>${esc(statVal(e,['gamesBehind']))}</td><td>${esc(statVal(e,['streak']))}</td></tr>`).join('');
+  const table=(name,arr)=>`<div class="section-head"><h2>${name}</h2><span>${arr.length} teams</span></div><div style="overflow-x:auto"><table class="live-table"><thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>Win %</th><th>GB</th><th>Streak</th></tr></thead><tbody>${renderRows(arr)}</tbody></table></div>`;
+  if(entries.length){$('standingsData').innerHTML=table('Eastern Conference',east.length?east:entries.slice(0,15))+table('Western Conference',west.length?west:entries.slice(15));}
+  else throw new Error('Standings response format was not recognized');
+ }catch(e){$('standingsData').innerHTML='<div class="data-note">Live standings could not be loaded from the public feed. View <a class="source-link" href="https://www.nba.com/standings" target="_blank" rel="noopener">NBA.com standings ↗</a> or <a class="source-link" href="https://www.espn.com.au/nba/standings" target="_blank" rel="noopener">ESPN standings ↗</a>.</div>';}
+}
+async function refreshTeams(){
+ try{
+  const d=await getJSON(`${API}/teams?limit=1000`);let list=d.sports?.[0]?.leagues?.[0]?.teams||d.teams||[];
+  list=list.map(x=>x.team||x).filter(t=>t.displayName||t.name);
+  if(!list.length)throw new Error('No teams');teams=list;
+  const byCode=new Map(list.map(t=>[t.abbreviation,t]));
+  const renderSide=(side)=>teamData[side].map(([code,name])=>{const t=byCode.get(code);const label=t?.displayName||t?.name||name;const href=t?.links?.find(l=>l.rel?.includes('web'))?.href||'https://www.nba.com/teams';return `<a class="team-chip" style="color:inherit;text-decoration:none" href="${esc(href)}" target="_blank" rel="noopener"><b>${esc(code)}</b><span>${esc(label)}</span></a>`;}).join('');
+  $('eastTeams').innerHTML=renderSide('east');$('westTeams').innerHTML=renderSide('west');
+  $('teamsNote').textContent=`30 NBA teams listed. ${list.length} team records returned by the ESPN directory. Select a team card to open its official team page.`;
+ }catch(e){const draw=side=>teamData[side].map(([code,name])=>`<a class="team-chip" style="color:inherit;text-decoration:none" href="https://www.nba.com/teams" target="_blank" rel="noopener"><b>${code}</b><span>${name}</span></a>`).join('');$('eastTeams').innerHTML=draw('east');$('westTeams').innerHTML=draw('west');$('teamsNote').textContent='Complete 30-team NBA directory. Current team data feed unavailable; open NBA.com teams for verified team profiles and rosters.';}
+}
+async function refreshPlayers(){
+ try{
+  const d=await getJSON(`${API}/leaders`);const cats=d.leaders||d.categories||[];
+  const selected=['points','rebounds','assists'];
+  const cards=selected.map(key=>{const c=cats.find(x=>(x.name||x.displayName||'').toLowerCase().includes(key));const leaders=c?.leaders||c?.leadersList||[];return `<article class="info-card"><h3>${key[0].toUpperCase()+key.slice(1)} leaders</h3>${leaders.slice(0,10).map((l,i)=>`<p style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${i+1}. ${esc(l.athlete?.displayName||l.name||'Player')}</b><br><span style="color:var(--muted)">${esc(l.team?.abbreviation||'')} · ${esc(l.displayValue||l.value||'')}</span></p>`).join('')||'<p>Leader data not available in this feed.</p>'}</article>`;}).join('');
+  $('playerLeaders').innerHTML=`<div class="info-grid">${cards}</div>`;
+ }catch(e){$('playerLeaders').innerHTML='<div class="data-note">Player leader feed unavailable. Browse current <a class="source-link" href="https://www.nba.com/stats/players/traditional" target="_blank" rel="noopener">NBA player statistics ↗</a> or <a class="source-link" href="https://www.espn.com.au/nba/stats" target="_blank" rel="noopener">ESPN Australia stats ↗</a>.</div>';}
+}
+document.querySelectorAll('.navtab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.navtab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$('view-'+btn.dataset.section).classList.add('active');}));
+document.querySelectorAll('[data-day]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-day]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');conf=btn.dataset.day;render();}));
+$('datePicker').value=today();
+$('datePicker').addEventListener('change',()=>{refreshScores();});
+$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);
+refreshScores();refreshSchedule();refreshStandings();refreshTeams();refreshPlayers();
+refreshTimer=setInterval(()=>{refreshScores();refreshSchedule();},30000);
+setInterval(()=>{refreshStandings();refreshPlayers();refreshTeams();},600000);
+</script>
+<style>
+.live-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:22px;font-size:13px}
+.live-table th,.live-table td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
+.live-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.7px;background:var(--panel2)}
+.live-table tr:last-child td{border-bottom:0}
+#connectionStatus{margin:0 0 12px}
+</style>
+</body></html>
